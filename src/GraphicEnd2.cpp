@@ -66,6 +66,7 @@ GraphicEnd2::~GraphicEnd2()
 
 int GraphicEnd2::readimage()
 {
+	cout<<"loading image "<<_index<<endl;
     ss<<_rgbPath<<_index<<".png";
     _currRGB = imread(ss.str(), 0);
     ss.str("");
@@ -150,6 +151,7 @@ int GraphicEnd2::run()
 
     readimage();
     _present.planes.push_back( extractKPandDesp( _currRGB, _currDep ) );
+	_present.frame_index = _index;
 
     RESULT_OF_MULTIPNP result = multiPnP( _currKF.planes, _present.planes, _currKF.frame_index, _present.frame_index );
     Eigen::Isometry3d T = result.T.inverse();
@@ -264,6 +266,7 @@ RESULT_OF_MULTIPNP GraphicEnd2::multiPnP(  vector<PLANE>& plane1, vector<PLANE>&
     
     if (loopclosure == false)
     {
+		cout<<"loopclosure == false"<<endl;
         Mat image_matches;
         drawMatches(_lastRGB, plane1[0].kp, _currRGB, plane2[0].kp, inlierMatches, image_matches, Scalar::all(-1), CV_RGB(255,255,255), Mat(), 4);
 //        imshow("match", image_matches);
@@ -277,6 +280,7 @@ RESULT_OF_MULTIPNP GraphicEnd2::multiPnP(  vector<PLANE>& plane1, vector<PLANE>&
     }
     else
     {
+		cout<<"loopclosure == ture"<<endl;
         Mat image_matches;
         stringstream ss;
         ss<<_rgbPath<<frame_index<<".png";

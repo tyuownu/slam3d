@@ -78,7 +78,7 @@ GraphicEnd::~GraphicEnd()
 
 void GraphicEnd::init(SLAMEnd* pSLAMEnd)
 {
-    cout<<"Graphic end init..."<<endl;
+    cout<<"GRAPHIC END INIT..."<<endl;
 
     _pSLAMEnd = pSLAMEnd;
     _index = atoi( g_pParaReader->GetPara("start_index").c_str() );
@@ -180,7 +180,8 @@ int GraphicEnd::run()
     }
 
     // 求解present到current的变换矩阵
-    RESULT_OF_MULTIPNP result = multiPnP( _currKF.planes, _present.planes );
+	_present.frame_index = _index;
+    RESULT_OF_MULTIPNP result = multiPnP( _currKF.planes, _present.planes, _currKF.frame_index, _present.frame_index );
     Eigen::Isometry3d T = result.T;
     T = T.inverse();  //好像是反着的
     
@@ -225,7 +226,7 @@ int GraphicEnd::run()
 
 int GraphicEnd::readimage()
 {
-    cout<<"loading image "<<_index<<endl;
+    cout<<"LOADING IMAGE "<<_index<<endl;
     //读取灰度图,深度图和点云
     ss<<_rgbPath<<_index<<".png";
     _currRGB = imread(ss.str(), 0);
@@ -654,10 +655,10 @@ vector<DMatch> GraphicEnd::pnp( PLANE& p1, PLANE& p2)
 }
 
 //通过若干个平面求解PnP问题，当匹配不上时会返回I
-RESULT_OF_MULTIPNP GraphicEnd::multiPnP( vector<PLANE>& plane1, vector<PLANE>& plane2, bool loopclosure, int frame_index, int minimum_inliers)
+RESULT_OF_MULTIPNP GraphicEnd::multiPnP( vector<PLANE>& plane1, vector<PLANE>& plane2,int id1,int id2, bool loopclosure, int frame_index, int minimum_inliers)
 {
     RESULT_OF_MULTIPNP result;
-    cout<<"solving multi PnP"<<endl;
+    cout<<"SOLVING MULTI PNP"<<endl;
     vector<DMatch> matches = match( plane1, plane2 );
     cout<<"matches of two planes: "<<matches.size()<<endl;
 
@@ -705,6 +706,7 @@ RESULT_OF_MULTIPNP GraphicEnd::multiPnP( vector<PLANE>& plane1, vector<PLANE>& p
     cout<<"matches: "<<match_show.size()<<endl;
     if (loopclosure == false)
     {
+		cout<<"LOOPCLOSURE == FALSE"<<endl;
         Mat image_matches;
         drawMatches(_lastRGB, kp1, _currRGB, kp2, inlierMatches, image_matches, Scalar::all(-1), CV_RGB(255,255,255), Mat(), 4);
         imshow("match", image_matches);
@@ -712,6 +714,7 @@ RESULT_OF_MULTIPNP GraphicEnd::multiPnP( vector<PLANE>& plane1, vector<PLANE>& p
     }
     else
     {
+		cout<<"LOOPCLOSURE == TURE"<<endl;
         Mat image_matches;
         stringstream ss;
         ss<<_rgbPath<<frame_index<<".png";
@@ -796,7 +799,7 @@ void GraphicEnd::loopClosure()
         if (n>=0)
         {
             vector<PLANE>& p1 = _keyframes[n].planes;
-            Eigen::Isometry3d T = multiPnP( p1, _currKF.planes ).T;
+            Eigen::Isometry3d T = multiPnP( p1, _currKF.planes,_keyframes[n].frame_index, _currKF.frame_index ).T;
             if (T.matrix() == Eigen::Isometry3d::Identity().matrix()) //匹配不上
                 continue;
             T = T.inverse();
@@ -822,7 +825,7 @@ void GraphicEnd::loopClosure()
     for (size_t i=0; i<_seed.size(); i++)
     {
         vector<PLANE>& p1 = _keyframes[_seed[i]].planes;
-        Eigen::Isometry3d T = multiPnP( p1, _currKF.planes ).T;
+        Eigen::Isometry3d T = multiPnP( p1, _currKF.planes,_keyframes[_seed[i]].frame_index,_currKF.frame_index ).T;
         if (T.matrix() == Eigen::Isometry3d::Identity().matrix()) //匹配不上
             continue;
         T = T.inverse();
@@ -851,7 +854,7 @@ void GraphicEnd::loopClosure()
             continue;
         checked.push_back( frame );
         vector<PLANE>& p1 = _keyframes[frame].planes;
-        RESULT_OF_MULTIPNP result = multiPnP( p1, _currKF.planes, true, _keyframes[frame].frame_index, 20 );
+        RESULT_OF_MULTIPNP result = multiPnP( p1, _currKF.planes,_keyframes[frame].frame_index, _currKF.frame_index, true, _keyframes[frame].frame_index, 20 );
         Eigen::Isometry3d T = result.T;
         
         if (T.matrix() == Eigen::Isometry3d::Identity().matrix()) //匹配不上
@@ -923,7 +926,7 @@ void GraphicEnd::lostRecovery()
     for (int i=0; i<_keyframes.size() - 1; i++)
     {
         vector<PLANE>& p1 = _keyframes[ i ].planes;
-        Eigen::Isometry3d T = multiPnP( p1, _currKF.planes ).T;
+        Eigen::Isometry3d T = multiPnP( p1, _currKF.planes, _keyframes[i].frame_index, _currKF.frame_index ).T;
         
         if (T.matrix() == Eigen::Isometry3d::Identity().matrix()) //匹配不上
             continue;

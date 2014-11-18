@@ -16,13 +16,13 @@ descriptor_name: SURF
 
 # -----my data-----
 start_index: 2
-end_index: 150
+end_index: 60
 # ------------------
 
 # 两帧相邻图像描述子之间最小匹配距离
 match_min_dist: 5
 # 每一次循环的等待时间（毫秒）
-step_time: 10
+step_time: 0
 
 
 #########################################

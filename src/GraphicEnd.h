@@ -125,7 +125,7 @@ class GraphicEnd
     vector<DMatch> pnp( PLANE& p1, PLANE& p2 ); 
 
     //求解两组平面间的多PnP问题，算法将调用SLAM端构造局部子图
-    virtual RESULT_OF_MULTIPNP multiPnP( vector<PLANE>& plane1, vector<PLANE>& plane2, bool loopclosure = false, int frame_index = 0, int minimum_inliers = 12);
+    virtual RESULT_OF_MULTIPNP multiPnP( vector<PLANE>& plane1, vector<PLANE>& plane2,int id1, int id2, bool loopclosure = false, int frame_index = 0, int minimum_inliers = 12);
 
     //闭环检测
     void loopClosure();

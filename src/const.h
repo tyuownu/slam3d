@@ -12,7 +12,7 @@ using namespace g2o;
 using namespace cv;
 using namespace std;
 
-const string parameter_file_addr = "./parameters.yaml";
+const string parameter_file_addr = "../parameters.yaml";
 const double PI = 3.141592654;
 
 //////////////////////////////////////////
